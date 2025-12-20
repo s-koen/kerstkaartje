@@ -1,95 +1,117 @@
+// 1. globals
 const canvas = document.getElementById("snowCanvas");
 const ctx = canvas.getContext("2d");
 
+const bgCanvas = document.createElement("canvas");
+const bgCtx = bgCanvas.getContext("2d");
 
+let pixelSize = 1;
+let gridWidth = 0;
+let gridHeight = 0;
+const snowflakes = [];
+
+// 2. load background
+const bgImg = new Image();
+bgImg.src = "background.png"; // must be 111 px wide for pixel alignment
+
+bgImg.onload = () => {
+    resizeCanvas();
+    updatePixelSize();
+    initSnowflakes(1000);
+    redrawBackground();
+    animate();
+};
+
+// 3. resize & pixel scaling
 function resizeCanvas() {
     const dpr = window.devicePixelRatio || 1;
 
-    const cssWidth  = window.innerWidth;
-    const cssHeight = window.innerHeight;
+    canvas.width = Math.floor(window.innerWidth * dpr);
+    canvas.height = Math.floor(window.innerHeight * dpr);
 
-    canvas.style.width  = cssWidth + "px";
-    canvas.style.height = cssHeight + "px";
-
-    canvas.width  = Math.floor(cssWidth  * dpr);
-    canvas.height = Math.floor(cssHeight * dpr);
+    canvas.style.width = window.innerWidth + "px";
+    canvas.style.height = window.innerHeight + "px";
 
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.imageSmoothingEnabled = false;
+
+    bgCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    bgCtx.imageSmoothingEnabled = false;
+
+    if (bgImg.complete) {
+        updatePixelSize();
+        redrawBackground();
+    }
 }
 
-resizeCanvas();
 window.addEventListener("resize", resizeCanvas);
 
-const snowImg = new Image();
-snowImg.src = "snow.png";
+function updatePixelSize() {
+    pixelSize = Math.max(1, canvas.clientWidth / bgImg.width);
+}
+
+// 4. background draw (bottom-aligned)
 
 
-const bgImg = new Image();
-bgImg.src = "background.png";
+function redrawBackground() {
+    const dpr = window.devicePixelRatio || 1;
 
+    // set bgCanvas to device pixels
+    bgCanvas.width = canvas.width;
+    bgCanvas.height = canvas.height;
 
-function drawBackground() {
+    bgCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    bgCtx.imageSmoothingEnabled = false;
+
+    // scale based on CSS pixels (clientWidth)
     const scale = canvas.clientWidth / bgImg.width;
-
-    const drawWidth  = bgImg.width  * scale;
-    const drawHeight = bgImg.height * scale;
+    const drawWidth = bgImg.width * scale / dpr;   // device pixels
+    const drawHeight = bgImg.height * scale / dpr; // device pixels
 
     const x = 0;
-    const y = canvas.clientHeight - drawHeight;
+    const y = (canvas.clientHeight - drawHeight * dpr) / dpr; // bottom aligned in device pixels
 
-    ctx.drawImage(bgImg, x, y, drawWidth, drawHeight);
+    bgCtx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+    bgCtx.drawImage(bgImg, x, y, drawWidth, drawHeight);
 }
 
 
-// snowflake setup
-const numSnow = 400; // number of snowflakes
-const snowflakes = [];
-
-for(let i=0; i<numSnow; i++){
-    snowflakes.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        speed: 1 + Math.random() * 2,
-        drift: (Math.random() - 0.5) * 0.5 // horizontal drift
-    });
-}
-
-// shake effect
-let shake = 0;
-canvas.addEventListener("click", () => {
-    shake = 100; // frames of shake
-});
-
-// animation loop
-function animate(){
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
 
-    drawBackground();
+// 5. snowflake init
+function initSnowflakes(n = 120) {
+    snowflakes.length = 0;
 
-    for(let f of snowflakes){
-        // apply shake
-        const shakeOffset = shake ? (Math.random() - 0.5) * 100 : 0;
+    gridWidth = bgImg.width;
+    gridHeight = Math.floor(canvas.clientHeight / pixelSize);
 
-        // move snowflake
-        f.y += f.speed;
-        f.x += f.drift;
-
-        // wrap around vertically
-        if(f.y > canvas.height) f.y = -10;
-        if(f.x < 0) f.x = canvas.width;
-        if(f.x > canvas.width) f.x = 0;
-
-        // draw
-        ctx.drawImage(snowImg, f.x + shakeOffset, f.y + shakeOffset, 26, 26);
+    for (let i = 0; i < n; i++) {
+        snowflakes.push({
+            x: Math.floor(Math.random() * gridWidth),
+            y: Math.floor(Math.random() * gridHeight),
+            speed: 0.3 + Math.random() * 0.7
+        });
     }
+}
 
-    if(shake > 0) shake--; // decay shake
+// 6. animate snow
+function animate() {
+    // draw cached background
+    ctx.drawImage(bgCanvas, 0, 0);
+
+    for (let f of snowflakes) {
+        f.y += f.speed;
+        if (f.y > gridHeight) {
+            f.y = 0;
+            f.x = Math.floor(Math.random() * gridWidth);
+        }
+
+        const drawX = Math.floor(f.x * pixelSize);
+        const drawY = Math.floor(f.y * pixelSize);
+
+        ctx.fillStyle = "#fff";
+        ctx.fillRect(drawX, drawY, pixelSize, pixelSize);
+    }
 
     requestAnimationFrame(animate);
 }
-
-// start animation when sprite loaded
-snowImg.onload = animate;
-
