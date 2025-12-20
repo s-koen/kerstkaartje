@@ -5,6 +5,9 @@ const ctx = canvas.getContext("2d");
 const bgCanvas = document.createElement("canvas");
 const bgCtx = bgCanvas.getContext("2d");
 
+const snowCanvas = document.createElement("canvas");
+const snowCtx = snowCanvas.getContext("2d");
+
 let pixelSize = 1;
 let gridWidth = 0;
 let gridHeight = 0;
@@ -17,7 +20,7 @@ bgImg.src = "background.png"; // must be 111 px wide for pixel alignment
 bgImg.onload = () => {
     resizeCanvas();
     updatePixelSize();
-    initSnowflakes(1000);
+    initSnowflakes(5000);
     redrawBackground();
     animate();
 };
@@ -34,7 +37,13 @@ function resizeCanvas() {
 
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.imageSmoothingEnabled = false;
+    //
+// snow buffer low-res
+    snowCanvas.width = bgImg.width; // one pixel per background column
+    snowCanvas.height = bgImg.height;
 
+    snowCtx.setTransform(1, 0, 0, 1, 0, 0);
+    snowCtx.imageSmoothingEnabled = false;
     bgCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
     bgCtx.imageSmoothingEnabled = false;
 
@@ -83,7 +92,7 @@ function initSnowflakes(n = 120) {
     snowflakes.length = 0;
 
     gridWidth = bgImg.width;
-    gridHeight = Math.floor(canvas.clientHeight / pixelSize);
+    gridHeight = bgImg.height;
 
     for (let i = 0; i < n; i++) {
         snowflakes.push({
@@ -96,9 +105,10 @@ function initSnowflakes(n = 120) {
 
 // 6. animate snow
 function animate() {
-    // draw cached background
-    ctx.drawImage(bgCanvas, 0, 0);
+    // clear low-res snow
+    snowCtx.clearRect(0, 0, snowCanvas.width, snowCanvas.height);
 
+    // draw all snowflakes into low-res buffer
     for (let f of snowflakes) {
         f.y += f.speed;
         if (f.y > gridHeight) {
@@ -106,12 +116,20 @@ function animate() {
             f.x = Math.floor(Math.random() * gridWidth);
         }
 
-        const drawX = Math.floor(f.x * pixelSize);
-        const drawY = Math.floor(f.y * pixelSize);
-
-        ctx.fillStyle = "#fff";
-        ctx.fillRect(drawX, drawY, pixelSize, pixelSize);
+        snowCtx.fillStyle = "#fff";
+        snowCtx.fillRect(f.x, Math.floor(f.y), 1, 1);
     }
+
+    // draw background
+    ctx.drawImage(bgCanvas, 0, 0);
+
+    // draw scaled-up snow on top
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(
+        snowCanvas,
+        0, 0, snowCanvas.width, snowCanvas.height,
+        0, 0, canvas.clientWidth, canvas.clientHeight
+    );
 
     requestAnimationFrame(animate);
 }
