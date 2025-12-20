@@ -8,24 +8,49 @@ const bgCtx = bgCanvas.getContext("2d");
 const snowCanvas = document.createElement("canvas");
 const snowCtx = snowCanvas.getContext("2d");
 
+const messages = [
+    "",
+    "fijne feestdagen!",
+    "van mij voor jou :)",
+];
+let currentMessage = 0;
+let displayedText = "";
+let charIndex = 0;
+let typeSpeed = 0.5; // letters per frame
+
 let pixelSize = 1;
 let gridWidth = 0;
 let gridHeight = 0;
 const snowflakes = [];
 
-// 2. load background
-const bgImg = new Image();
-bgImg.src = "background.png"; // must be 111 px wide for pixel alignment
 
+let bgReady = false;
+let fontReady = false;
+
+const bgImg = new Image();
+bgImg.src = "background.png";
 bgImg.onload = () => {
+    bgReady = true;
     resizeCanvas();
     updatePixelSize();
     initSnowflakes(1000);
     redrawBackground();
-    animate();
+    startIfReady();
 };
 
-// 3. resize & pixel scaling
+// wait for font
+document.fonts.ready.then(() => {
+    fontReady = true;
+    startIfReady();
+});
+
+function startIfReady() {
+    if (bgReady && fontReady) {
+        animate();
+    }
+}
+
+
 function resizeCanvas() {
     const dpr = window.devicePixelRatio || 1;
 
@@ -37,9 +62,8 @@ function resizeCanvas() {
 
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.imageSmoothingEnabled = false;
-    //
-// snow buffer low-res
-    snowCanvas.width = bgImg.width; // one pixel per background column
+
+    snowCanvas.width = bgImg.width;
     snowCanvas.height = bgImg.height;
 
     snowCtx.setTransform(1, 0, 0, 1, 0, 0);
@@ -55,30 +79,37 @@ function resizeCanvas() {
 
 window.addEventListener("resize", resizeCanvas);
 
+
+canvas.addEventListener("click", () => {
+
+    if(displayedText === messages[currentMessage]){
+        currentMessage = (currentMessage + 1) % messages.length;
+        displayedText = "";
+        charIndex = 0;
+    }
+});
+
 function updatePixelSize() {
     pixelSize = Math.max(1, canvas.clientWidth / bgImg.width);
 }
 
-// 4. background draw (bottom-aligned)
 
 
 function redrawBackground() {
     const dpr = window.devicePixelRatio || 1;
 
-    // set bgCanvas to device pixels
     bgCanvas.width = canvas.width;
     bgCanvas.height = canvas.height;
 
     bgCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
     bgCtx.imageSmoothingEnabled = false;
 
-    // scale based on CSS pixels (clientWidth)
     const scale = canvas.clientWidth / bgImg.width;
-    const drawWidth = bgImg.width * scale / dpr;   // device pixels
-    const drawHeight = bgImg.height * scale / dpr; // device pixels
+    const drawWidth = bgImg.width * scale / dpr;
+    const drawHeight = bgImg.height * scale / dpr;
 
     const x = 0;
-    const y = (canvas.clientHeight - drawHeight * dpr) / dpr; // bottom aligned in device pixels
+    const y = (canvas.clientHeight - drawHeight * dpr) / dpr;
 
     bgCtx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
     bgCtx.drawImage(bgImg, x, y, drawWidth, drawHeight);
@@ -87,7 +118,6 @@ function redrawBackground() {
 
 
 
-// 5. snowflake init
 function initSnowflakes(n = 120) {
     snowflakes.length = 0;
 
@@ -106,12 +136,9 @@ function initSnowflakes(n = 120) {
     }
 }
 
-// 6. animate snow
 function animate() {
-    // clear low-res snow
     snowCtx.clearRect(0, 0, snowCanvas.width, snowCanvas.height);
 
-    // draw all snowflakes into low-res buffer
     for (let f of snowflakes) {
         f.y += f.speed;
         if (f.y > gridHeight) {
@@ -133,16 +160,25 @@ function animate() {
         snowCtx.fillRect(f.x, Math.floor(f.y), 1, 1);
     }
 
-    // draw background
     ctx.drawImage(bgCanvas, 0, 0);
 
-    // draw scaled-up snow on top
     ctx.imageSmoothingEnabled = false;
     ctx.drawImage(
         snowCanvas,
         0, 0, snowCanvas.width, snowCanvas.height,
         0, 0, canvas.clientWidth, canvas.clientHeight
     );
+
+    if(charIndex < messages[currentMessage].length){
+        charIndex += typeSpeed;
+        if(charIndex > messages[currentMessage].length) charIndex = messages[currentMessage].length;
+        displayedText = messages[currentMessage].slice(0, charIndex);
+    }
+
+    ctx.fillStyle = "#FFE6CC";
+    ctx.font = "60px 'peaberry'";
+    ctx.textAlign = "center";
+    ctx.fillText(displayedText, canvas.clientWidth / 2, canvas.clientHeight /2.5);
 
     requestAnimationFrame(animate);
 }
