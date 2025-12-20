@@ -43,7 +43,7 @@ function drawBackground() {
 
 
 // snowflake setup
-const numSnow = 4000; // number of snowflakes
+const numSnow = 400; // number of snowflakes
 const snowflakes = [];
 
 for(let i=0; i<numSnow; i++){
