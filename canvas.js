@@ -1,22 +1,49 @@
 const canvas = document.getElementById("snowCanvas");
 const ctx = canvas.getContext("2d");
 
-// size canvas to match CSS
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight * 2;
 
-// handle resize
-window.addEventListener("resize", () => {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight * 2;
-});
+function resizeCanvas() {
+    const dpr = window.devicePixelRatio || 1;
 
-// load snowflake sprite
+    const cssWidth  = window.innerWidth;
+    const cssHeight = window.innerHeight;
+
+    canvas.style.width  = cssWidth + "px";
+    canvas.style.height = cssHeight + "px";
+
+    canvas.width  = Math.floor(cssWidth  * dpr);
+    canvas.height = Math.floor(cssHeight * dpr);
+
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.imageSmoothingEnabled = false;
+}
+
+resizeCanvas();
+window.addEventListener("resize", resizeCanvas);
+
 const snowImg = new Image();
 snowImg.src = "snow.png";
 
+
+const bgImg = new Image();
+bgImg.src = "background.png";
+
+
+function drawBackground() {
+    const scale = canvas.clientWidth / bgImg.width;
+
+    const drawWidth  = bgImg.width  * scale;
+    const drawHeight = bgImg.height * scale;
+
+    const x = 0;
+    const y = canvas.clientHeight - drawHeight;
+
+    ctx.drawImage(bgImg, x, y, drawWidth, drawHeight);
+}
+
+
 // snowflake setup
-const numSnow = 5000; // number of snowflakes
+const numSnow = 4000; // number of snowflakes
 const snowflakes = [];
 
 for(let i=0; i<numSnow; i++){
@@ -38,6 +65,9 @@ canvas.addEventListener("click", () => {
 function animate(){
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+
+    drawBackground();
+
     for(let f of snowflakes){
         // apply shake
         const shakeOffset = shake ? (Math.random() - 0.5) * 100 : 0;
@@ -47,7 +77,7 @@ function animate(){
         f.x += f.drift;
 
         // wrap around vertically
-        if(f.y > canvas.height) f.y = 0;
+        if(f.y > canvas.height) f.y = -10;
         if(f.x < 0) f.x = canvas.width;
         if(f.x > canvas.width) f.x = 0;
 
