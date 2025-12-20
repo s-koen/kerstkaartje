@@ -20,7 +20,7 @@ bgImg.src = "background.png"; // must be 111 px wide for pixel alignment
 bgImg.onload = () => {
     resizeCanvas();
     updatePixelSize();
-    initSnowflakes(5000);
+    initSnowflakes(1000);
     redrawBackground();
     animate();
 };
@@ -94,11 +94,14 @@ function initSnowflakes(n = 120) {
     gridWidth = bgImg.width;
     gridHeight = bgImg.height;
 
+    random_array = Array.from({length: gridWidth}, () => Math.floor(Math.random() * 100 - 2.5));
+
+
     for (let i = 0; i < n; i++) {
         snowflakes.push({
             x: Math.floor(Math.random() * gridWidth),
             y: Math.floor(Math.random() * gridHeight),
-            speed: 0.3 + Math.random() * 0.7
+            speed: 0.1 + Math.random()**2 * 0.7
         });
     }
 }
@@ -116,7 +119,17 @@ function animate() {
             f.x = Math.floor(Math.random() * gridWidth);
         }
 
-        snowCtx.fillStyle = "#fff";
+        if (f.y > gridHeight / 2.5 + random_array[f.x]) {
+            if (f.speed >= 0.4){
+                snowCtx.fillStyle = "#fff";
+            } else {
+                snowCtx.fillStyle = "#8A7C6E";
+            }
+        } else if (f.y > gridHeight / 3.5 + random_array[f.x]){
+            snowCtx.fillStyle = "#888";
+        } else {
+            snowCtx.fillStyle = "#373745";
+        }
         snowCtx.fillRect(f.x, Math.floor(f.y), 1, 1);
     }
 
