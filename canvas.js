@@ -16,7 +16,7 @@ const messages = [
 let currentMessage = 0;
 let displayedText = "";
 let charIndex = 0;
-let typeSpeed = 0.5; // letters per frame
+let typeSpeed = 1; // letters per frame
 
 let pixelSize = 1;
 let gridWidth = 0;
