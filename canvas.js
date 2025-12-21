@@ -121,11 +121,6 @@ function resizeCanvas() {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.imageSmoothingEnabled = false;
 
-    snowCanvas.width = bgImg.width;
-    snowCanvas.height = bgImg.height;
-
-    snowCtx.setTransform(1, 0, 0, 1, 0, 0);
-    snowCtx.imageSmoothingEnabled = false;
     bgCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
     bgCtx.imageSmoothingEnabled = false;
 
@@ -133,6 +128,15 @@ function resizeCanvas() {
         updatePixelSize();
         redrawBackground();
     }
+
+    snowCanvas.width  = canvas.clientWidth;
+    snowCanvas.height = canvas.clientHeight;
+    
+    console.log(pixelSize)
+    snowCtx.setTransform(pixelSize, 0, 0, pixelSize, 0, 0);
+    snowCtx.imageSmoothingEnabled = false;
+
+
 }
 
 window.addEventListener("resize", resizeCanvas);
@@ -260,47 +264,65 @@ function animate() {
             f.x = 0;
          }
 
+        
+        const ix = f.x | 0; // fast floor
+        const iy = f.y | 0;
+        
+        const rand = random_array[ix] || 0;
+        const mvx = Math.abs(f.mvx);
+        const ms  = Math.abs(f.mspeed);
+        
+        const y1 = gridHeight / 2.5 + rand;
+        const y2 = gridHeight / 3.5 + rand;
 
-        if (f.y > gridHeight / 2.5 + random_array[Math.round(f.x)]) {
-            if (f.speed >= 0.1){
-                if (random_array[Math.round(f.x)] > 20){
-
-                snowCtx.fillStyle = "#fff";
-                } else {
-                snowCtx.fillStyle = "#999";
-                }
+        
+        let color;
+        
+        if (f.y > y1) {
+            if (f.speed >= 0.1) {
+                color = rand > 20 ? "#fff" : "#999";
             } else {
-                snowCtx.fillStyle = "#aaa";
+                color = "#aaa";
             }
-        } else if (f.y > gridHeight / 3.5 + random_array[Math.round(f.x)]){
-            snowCtx.fillStyle = "#7a7a7a";
+        } else if (f.y > y2) {
+            color = "#7a7a7a";
         } else {
-            snowCtx.fillStyle = "#444";
-        }
-        if (Math.abs(f.mvx) > 0.0001){
-            snowCtx.fillStyle = firework3_colors[firework_index];
+            color = "#444";
         }
 
-        if (Math.abs(f.mvx) > 0.001){
-            snowCtx.fillStyle = firework2_colors[firework_index];
+
+        if (mvx > 0.01) {
+            color = firework1_colors[firework_index];
+        } else if (mvx > 0.001) {
+            color = firework2_colors[firework_index];
+        } else if (mvx > 0.0001) {
+            color = firework3_colors[firework_index];
         }
-        if (Math.abs(f.mvx) > 0.01){
-            snowCtx.fillStyle = firework1_colors[firework_index];
+
+
+        let w = 1;
+        if (mvx > 0.5)      w = 4;
+        else if (mvx > 0.001) w = 3;
+        else if (mvx > 0.0001) w = 2;
+        
+        let h = 1;
+        if (ms > 0.5)      h = 4;
+        else if (ms > 0.001) h = 3;
+        else if (ms > 0.0001) h = 2;
+
+
+        snowCtx.fillStyle = color;
+        snowCtx.fillRect(ix, iy, w, h);
+
         }
-        snowCtx.fillRect(Math.round(f.x),
-            Math.floor(f.y), 
-            Math.round((Math.abs(f.mvx) > 0.5) ? 4 : (Math.abs(f.mvx) > 0.001) ? 3 : (Math.abs(f.mvx) > 0.0001) ? 2 : 1),
-            Math.round((Math.abs(f.mspeed) > 0.5) ? 4 : (Math.abs(f.mspeed) > 0.001) ? 3 : (Math.abs(f.mspeed) > 0.0001) ? 2 : 1));
-    }
+
 
     ctx.drawImage(bgCanvas, 0, 0);
 
     ctx.imageSmoothingEnabled = false;
-    ctx.drawImage(
-        snowCanvas,
-        0, 0, snowCanvas.width, snowCanvas.height,
-        0, 0, canvas.clientWidth, canvas.clientHeight
-    );
+    
+    ctx.drawImage(snowCanvas, 0, 0);
+
 
     if(charIndex < messages[currentMessage].length){
         charIndex += typeSpeed;
