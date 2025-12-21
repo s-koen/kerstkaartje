@@ -75,7 +75,7 @@ bgImg.onload = () => {
     bgReady = true;
     resizeCanvas();
     updatePixelSize();
-    initSnowflakes(1000);
+    initSnowflakes(500);
     redrawBackground();
     startIfReady();
 };
