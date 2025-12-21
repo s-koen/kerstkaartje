@@ -2,17 +2,65 @@
 const canvas = document.getElementById("snowCanvas");
 const ctx = canvas.getContext("2d");
 
+canvas.style.touchAction = "none";
+
 const bgCanvas = document.createElement("canvas");
 const bgCtx = bgCanvas.getContext("2d");
 
 const snowCanvas = document.createElement("canvas");
 const snowCtx = snowCanvas.getContext("2d");
 
+const bgSound = document.getElementById("bgSound");
+const firework_sound = document.getElementById("fireworkSound");
+firework_sound.preload = "auto";
+
 const messages = [
-    "",
+    "[klik]",
     "fijne feestdagen!",
     "van mij voor jou :)",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
 ];
+
+const firework1_colors = [
+    "#d3b03b",
+    "#43f95b",
+    "#f20edf",
+    "#0793f7",
+    "#d3b03b",
+    "#ef1010",
+    "#ffffff"
+];
+
+const firework2_colors = [
+    "#fcbe05",
+    "#62ad6c",
+    "#db6fd2",
+    "#c7e5f9",
+    "#f20edf",
+    "#fc3535",
+    "#6d25fc"
+];
+
+const firework3_colors = [
+    "#aa985d",
+    "#667c69",
+    "#aa8fa8",
+    "#4c687c",
+    "#aa8fa8",
+    "#bc8a44",
+    "#775bad",
+];
+
+
+let length_fireworks = firework1_colors.length;
+let firework_index = 0;
+
 let currentMessage = 0;
 let displayedText = "";
 let charIndex = 0;
@@ -28,12 +76,12 @@ let bgReady = false;
 let fontReady = false;
 
 const bgImg = new Image();
-bgImg.src = "background-snow.png";
+bgImg.src = "background-snow-gray2.png";
 bgImg.onload = () => {
     bgReady = true;
     resizeCanvas();
     updatePixelSize();
-    initSnowflakes(1400);
+    initSnowflakes(1000);
     redrawBackground();
     startIfReady();
 };
@@ -51,6 +99,16 @@ function startIfReady() {
 }
 
 
+function startSound() {
+    bgSound.volume = 0.4;   // optional
+    bgSound.play();
+}
+
+function startFirework() {
+    firework_sound.volume = 0.4;   // optional
+    firework_sound.currentTime = 0;
+    firework_sound.play();
+}
 function resizeCanvas() {
     const dpr = window.devicePixelRatio || 1;
 
@@ -86,8 +144,39 @@ canvas.addEventListener("click", () => {
         currentMessage = (currentMessage + 1) % messages.length;
         displayedText = "";
         charIndex = 0;
+        messages[0] = "";
+    }
+    if (bgSound.paused) {
+            startSound();
+        }
+    startFirework();
+});
+
+
+canvas.addEventListener("pointerdown", (e) => {
+
+    firework_index = (firework_index + 1 + Math.floor(Math.random()*(length_fireworks-2))) % length_fireworks;
+    const rect = canvas.getBoundingClientRect();
+    const cx = (e.clientX - rect.left) / pixelSize;
+    const cy = (e.clientY - rect.top) / pixelSize;
+
+    for (let f of snowflakes) {
+        const dx = f.x - cx;
+        const dy = f.y - cy;
+        const dist = Math.hypot(dx, dy);
+
+        const radius = Math.random() * 25 + 10;
+
+        if (dist < radius) {
+            const strength_x = (radius - dist) * 0.0001 * radius;
+            f.mvx = (f.mvx || 0) + dx * strength_x;
+
+            const strength_y = (radius - dist) * 0.0001 * radius;
+            f.mspeed = (f.mspeed || 0) + dy * strength_y;
+        }
     }
 });
+
 
 function updatePixelSize() {
     pixelSize = Math.max(1, canvas.clientWidth / bgImg.width);
@@ -127,10 +216,14 @@ function initSnowflakes(n = 120) {
     random_array = Array.from({length: gridWidth}, () => Math.floor(Math.random() * 100 - 2.5));
 
 
+    wind = -0.02 
     for (let i = 0; i < n; i++) {
         snowflakes.push({
             x: Math.floor(Math.random() * gridWidth),
             y: Math.floor(Math.random() * gridHeight),
+            vx: wind + Math.random() * 0.01,
+            mvx: 0,
+            mspeed: 0,
             speed: 0.1 + Math.random()**2 * 0.5
         });
     }
@@ -140,24 +233,50 @@ function animate() {
     snowCtx.clearRect(0, 0, snowCanvas.width, snowCanvas.height);
 
     for (let f of snowflakes) {
-        f.y += f.speed;
+        f.y += f.speed + f.mspeed;
+        f.x += f.vx + f.mvx;
+        f.mvx = f.mvx * 0.9;
+        f.mspeed = f.mspeed * 0.9;
+
         if (f.y > gridHeight) {
             f.y = 0;
             f.x = Math.floor(Math.random() * gridWidth);
         }
-
-        if (f.y > gridHeight / 2.5 + random_array[f.x]) {
-            if (f.speed >= 0.3){
-                snowCtx.fillStyle = "#fff";
-            } else {
-                snowCtx.fillStyle = "#dDdDdD";
-            }
-        } else if (f.y > gridHeight / 3.5 + random_array[f.x]){
-            snowCtx.fillStyle = "#bbbbbb";
-        } else {
-            snowCtx.fillStyle = "#aaaaaa";
+        if (f.x < 0) {
+            f.x = gridWidth;
         }
-        snowCtx.fillRect(f.x, Math.floor(f.y), 1, 1);
+        if (f.x > gridWidth) {
+            f.x = 0;
+         }
+
+
+        if (f.y > gridHeight / 2.5 + random_array[Math.round(f.x)]) {
+            if (f.speed >= 0.1){
+                if (random_array[Math.round(f.x)] > 20){
+
+                snowCtx.fillStyle = "#fff";
+                } else {
+                snowCtx.fillStyle = "#888";
+                }
+            } else {
+                snowCtx.fillStyle = "#aaa";
+            }
+        } else if (f.y > gridHeight / 3.5 + random_array[Math.round(f.x)]){
+            snowCtx.fillStyle = "#999999";
+        } else {
+            snowCtx.fillStyle = "#444";
+        }
+        if (Math.abs(f.mvx) > 0.00001){
+            snowCtx.fillStyle = firework3_colors[firework_index];
+        }
+
+        if (Math.abs(f.mvx) > 0.001){
+            snowCtx.fillStyle = firework2_colors[firework_index];
+        }
+        if (Math.abs(f.mvx) > 0.01){
+            snowCtx.fillStyle = firework1_colors[firework_index];
+        }
+        snowCtx.fillRect(Math.round(f.x), Math.floor(f.y), Math.round(5 * f.mvx + 1), Math.round(5 * f.mspeed + 1));
     }
 
     ctx.drawImage(bgCanvas, 0, 0);
@@ -175,10 +294,17 @@ function animate() {
         displayedText = messages[currentMessage].slice(0, charIndex);
     }
 
-    ctx.fillStyle = "#FFE6CC";
+    if (currentMessage % 2 == 0) {
+        ctx.fillStyle = "#FAEC72";
+    } else {
+        ctx.fillStyle = "#fc7e7e";
+    }
     ctx.font = "60px 'peaberry'";
     ctx.textAlign = "center";
-    ctx.fillText(displayedText, canvas.clientWidth / 2, canvas.clientHeight /2.5);
+    
+    const wind = Math.sin(performance.now() * 0.002) * 30;
+
+    ctx.fillText(displayedText, canvas.clientWidth / 2, canvas.clientHeight /3.5 + wind);
 
     requestAnimationFrame(animate);
 }
