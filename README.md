@@ -1,2 +1,2 @@
 # kerstkaartje
-interactief kerstkaartje voor lyk :)
+interactief kerstkaartje voor lyn :)
