@@ -1,2 +1,2 @@
-# snow-globe-card
+# kerstkaartje
 online alternative for christmas card :)
