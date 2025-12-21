@@ -11,8 +11,14 @@ const snowCanvas = document.createElement("canvas");
 const snowCtx = snowCanvas.getContext("2d");
 
 const bgSound = document.getElementById("bgSound");
-const firework_sound = document.getElementById("fireworkSound");
-firework_sound.preload = "auto";
+
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+let clickBuffer = null;
+
+fetch("firework.mp3")
+    .then(r => r.arrayBuffer())
+    .then(b => audioCtx.decodeAudioData(b))
+    .then(buf => clickBuffer = buf);
 
 const messages = [
     "[klik]",
@@ -143,7 +149,18 @@ canvas.addEventListener("click", () => {
     if (bgSound.paused) {
             startSound();
         }
-    startFirework();
+    if (!clickBuffer) return;
+
+    if (audioCtx.state === "suspended") {
+        audioCtx.resume();
+    }
+
+    const src = audioCtx.createBufferSource();
+    src.buffer = clickBuffer;
+    src.connect(audioCtx.destination);
+
+    src.playbackRate.value = 0.85 + Math.random() * 0.3;
+    src.start();
 });
 
 
