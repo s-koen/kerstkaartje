@@ -1,2 +1,2 @@
 # kerstkaartje
-online alternative for christmas card :)
+interactief kerstkaartje voor lyn :)
