@@ -33,7 +33,7 @@ bgImg.onload = () => {
     bgReady = true;
     resizeCanvas();
     updatePixelSize();
-    initSnowflakes(1000);
+    initSnowflakes(1400);
     redrawBackground();
     startIfReady();
 };
@@ -131,7 +131,7 @@ function initSnowflakes(n = 120) {
         snowflakes.push({
             x: Math.floor(Math.random() * gridWidth),
             y: Math.floor(Math.random() * gridHeight),
-            speed: 0.1 + Math.random()**2 * 0.7
+            speed: 0.1 + Math.random()**2 * 0.5
         });
     }
 }
@@ -147,15 +147,15 @@ function animate() {
         }
 
         if (f.y > gridHeight / 2.5 + random_array[f.x]) {
-            if (f.speed >= 0.4){
+            if (f.speed >= 0.3){
                 snowCtx.fillStyle = "#fff";
             } else {
-                snowCtx.fillStyle = "#BDBDBD";
+                snowCtx.fillStyle = "#dDdDdD";
             }
         } else if (f.y > gridHeight / 3.5 + random_array[f.x]){
-            snowCtx.fillStyle = "#888";
+            snowCtx.fillStyle = "#bbbbbb";
         } else {
-            snowCtx.fillStyle = "#373745";
+            snowCtx.fillStyle = "#aaaaaa";
         }
         snowCtx.fillRect(f.x, Math.floor(f.y), 1, 1);
     }
