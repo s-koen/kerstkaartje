@@ -16,12 +16,6 @@ firework_sound.preload = "auto";
 
 const messages = [
     "[klik]",
-    "fijne feestdagen!",
-    "van mij voor jou :)",
-    "",
-    "",
-    "",
-    "",
     "",
     "",
     "",
@@ -256,17 +250,17 @@ function animate() {
 
                 snowCtx.fillStyle = "#fff";
                 } else {
-                snowCtx.fillStyle = "#888";
+                snowCtx.fillStyle = "#999";
                 }
             } else {
                 snowCtx.fillStyle = "#aaa";
             }
         } else if (f.y > gridHeight / 3.5 + random_array[Math.round(f.x)]){
-            snowCtx.fillStyle = "#999999";
+            snowCtx.fillStyle = "#7a7a7a";
         } else {
             snowCtx.fillStyle = "#444";
         }
-        if (Math.abs(f.mvx) > 0.00001){
+        if (Math.abs(f.mvx) > 0.0001){
             snowCtx.fillStyle = firework3_colors[firework_index];
         }
 
@@ -276,7 +270,10 @@ function animate() {
         if (Math.abs(f.mvx) > 0.01){
             snowCtx.fillStyle = firework1_colors[firework_index];
         }
-        snowCtx.fillRect(Math.round(f.x), Math.floor(f.y), Math.round(5 * f.mvx + 1), Math.round(5 * f.mspeed + 1));
+        snowCtx.fillRect(Math.round(f.x),
+            Math.floor(f.y), 
+            Math.round((Math.abs(f.mvx) > 0.5) ? 4 : (Math.abs(f.mvx) > 0.001) ? 3 : (Math.abs(f.mvx) > 0.0001) ? 2 : 1),
+            Math.round((Math.abs(f.mspeed) > 0.5) ? 4 : (Math.abs(f.mspeed) > 0.001) ? 3 : (Math.abs(f.mspeed) > 0.0001) ? 2 : 1));
     }
 
     ctx.drawImage(bgCanvas, 0, 0);
