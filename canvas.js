@@ -28,7 +28,7 @@ let bgReady = false;
 let fontReady = false;
 
 const bgImg = new Image();
-bgImg.src = "background.png";
+bgImg.src = "background-snow.png";
 bgImg.onload = () => {
     bgReady = true;
     resizeCanvas();
@@ -150,7 +150,7 @@ function animate() {
             if (f.speed >= 0.4){
                 snowCtx.fillStyle = "#fff";
             } else {
-                snowCtx.fillStyle = "#8A7C6E";
+                snowCtx.fillStyle = "#BDBDBD";
             }
         } else if (f.y > gridHeight / 3.5 + random_array[f.x]){
             snowCtx.fillStyle = "#888";
