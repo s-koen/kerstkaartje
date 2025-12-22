@@ -360,8 +360,8 @@ function animate() {
         const mvx = Math.abs(f.mvx);
         const ms  = Math.abs(f.mspeed);
         
-        const y1 = gridHeight / 2.5 + rand;
-        const y2 = gridHeight / 3.5 + rand;
+        const y1 = gridHeight / 4.5 + rand;
+        const y2 = gridHeight / 5.5 + rand;
 
         
         let color;
