@@ -22,10 +22,32 @@ fetch("firework.mp3")
 
 const messages = [
     "[klik]",
+    "lyn,",
+    "ik wens je\nwarme en fijne\ndagen om 2O25\nmee af te sluiten.",
+    "moge 2O26 lief voor\nje zijn, en je veel\nvreugde en mooie\nmomenten brengen!",
+    "ik ben dankbaar\ndat ik je ken :)",
+    "veel liefs,\nkoen",
     "",
     "",
     "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "leuk vuurwerk he :)\n                                                                                                                                                                           ",
+    ""
 ];
+
+const textcolors = [
+    "#FAEC72",
+    "#fc7e7e",
+    "#78ea59",
+    "#59eaba",
+    "#c374fc",
+]
+
 
 const firework1_colors = [
     "#d3b03b",
@@ -100,15 +122,10 @@ function startIfReady() {
 
 
 function startSound() {
-    bgSound.volume = 0.4;   // optional
+    bgSound.volume = 1;
     bgSound.play();
 }
 
-function startFirework() {
-    firework_sound.volume = 0.4;   // optional
-    firework_sound.currentTime = 0;
-    firework_sound.play();
-}
 function resizeCanvas() {
     const dpr = window.devicePixelRatio || 1;
 
@@ -132,44 +149,114 @@ function resizeCanvas() {
     snowCanvas.width  = canvas.clientWidth;
     snowCanvas.height = canvas.clientHeight;
     
-    console.log(pixelSize)
     snowCtx.setTransform(pixelSize, 0, 0, pixelSize, 0, 0);
     snowCtx.imageSmoothingEnabled = false;
-
-
 }
 
 window.addEventListener("resize", resizeCanvas);
 
+let skip = false;
 
-canvas.addEventListener("click", () => {
+canvas.addEventListener("click", (e) => {
+
+    if (skip == true) {
+        return;
+    }
 
     if(displayedText === messages[currentMessage]){
         currentMessage = (currentMessage + 1) % messages.length;
         displayedText = "";
         charIndex = 0;
-        messages[0] = "";
+        messages[currentMessage - 1] = "";
     }
     if (bgSound.paused) {
             startSound();
+            skip = true;
         }
     if (!clickBuffer) return;
 
     if (audioCtx.state === "suspended") {
         audioCtx.resume();
+        skip = true;
     }
 
     const src = audioCtx.createBufferSource();
     src.buffer = clickBuffer;
-    src.connect(audioCtx.destination);
-
+    
+    const gain = audioCtx.createGain();
+    gain.gain.value = 0.3 + Math.random() * 0.3;
+    
+    src.connect(gain);
+    gain.connect(audioCtx.destination);
+    
     src.playbackRate.value = 0.85 + Math.random() * 0.3;
     src.start();
+
+    firework_index = (firework_index + 1 + Math.floor(Math.random()*(length_fireworks-2))) % length_fireworks;
+    const rect = canvas.getBoundingClientRect();
+    const cx = (e.clientX - rect.left) / pixelSize;
+    const cy = (e.clientY - rect.top) / pixelSize;
+
+    for (let f of snowflakes) {
+        const dx = f.x - cx;
+        const dy = f.y - cy;
+        const dist = Math.hypot(dx, dy);
+
+        const radius = Math.random() * 25 + 10;
+
+        if (dist < radius) {
+            const strength_x = (radius - dist) * 0.0001 * radius;
+            f.mvx = (f.mvx || 0) + dx * strength_x;
+
+            const strength_y = (radius - dist) * 0.0001 * radius;
+            f.mspeed = (f.mspeed || 0) + dy * strength_y;
+        }
+    }
+
+});
+
+canvas.addEventListener("touchstart", () => {
+
+    if (bgSound.paused) {
+        return    
+    }
+
+    if (audioCtx.state === "suspended") {
+        return
+    }
+
+    if(displayedText === messages[currentMessage]){
+        currentMessage = (currentMessage + 1) % messages.length;
+        displayedText = "";
+        charIndex = 0;
+        messages[currentMessage - 1] = "";
+    }
+
+
+    const src = audioCtx.createBufferSource();
+    src.buffer = clickBuffer;
+    
+    const gain = audioCtx.createGain();
+    gain.gain.value = 0.3 + Math.random() * 0.3;
+    
+    src.connect(gain);
+    gain.connect(audioCtx.destination);
+    
+    src.playbackRate.value = 0.85 + Math.random() * 0.3;
+    src.start();
+
 });
 
 
 canvas.addEventListener("pointerdown", (e) => {
 
+    if (bgSound.paused) {
+        return    
+    }
+
+    if (audioCtx.state === "suspended") {
+        return
+    }
     firework_index = (firework_index + 1 + Math.floor(Math.random()*(length_fireworks-2))) % length_fireworks;
     const rect = canvas.getBoundingClientRect();
     const cx = (e.clientX - rect.left) / pixelSize;
@@ -330,17 +417,23 @@ function animate() {
         displayedText = messages[currentMessage].slice(0, charIndex);
     }
 
-    if (currentMessage % 2 == 0) {
-        ctx.fillStyle = "#FAEC72";
-    } else {
-        ctx.fillStyle = "#fc7e7e";
-    }
-    ctx.font = "60px 'peaberry'";
+    ctx.fillStyle = textcolors[currentMessage % textcolors.length];
+    ctx.font = "70px 'peaberry'";
     ctx.textAlign = "center";
     
     const wind = Math.sin(performance.now() * 0.002) * 30;
 
-    ctx.fillText(displayedText, canvas.clientWidth / 2, canvas.clientHeight /3.5 + wind);
+    
+    const lines = displayedText.split("\n");
+    const lineHeight = 90;
+    
+    lines.forEach((line, i) => {
+        ctx.fillText(
+            line,
+            canvas.clientWidth / 2,
+            canvas.clientHeight / 3.5 + wind + i * lineHeight
+        );
+});
 
     requestAnimationFrame(animate);
 }
