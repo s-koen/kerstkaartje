@@ -98,6 +98,7 @@ let bgReady = false;
 let fontReady = false;
 
 const bgImg = new Image();
+    "",
 bgImg.src = "background-snow-gray2.png";
 bgImg.onload = () => {
     bgReady = true;
@@ -418,7 +419,7 @@ function animate() {
     }
 
     ctx.fillStyle = textcolors[currentMessage % textcolors.length];
-    ctx.font = "70px 'peaberry'";
+    ctx.font = "60px 'peaberry'";
     ctx.textAlign = "center";
     
     const wind = Math.sin(performance.now() * 0.002) * 30;
