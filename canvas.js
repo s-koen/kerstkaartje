@@ -21,7 +21,7 @@ fetch("firework.mp3")
     .then(buf => clickBuffer = buf);
 
 const messages = [
-    "[klik]",
+    "[klik]\n\n[ps. geluid aan :) ]",
     "lyn,",
     "ik wens je\nwarme en fijne\ndagen om 2O25\nmee af te sluiten.",
     "moge 2O26 lief voor\nje zijn, en je veel\nvreugde en mooie\nmomenten brengen!",
